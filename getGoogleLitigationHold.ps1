@@ -374,20 +374,25 @@ Foreach ($orgUnitId in $orgUnitIdFinal){
     "Authorization" = $Bearer
     }
 
-    $params = @{
-        'Uri'             = $baseURI + "?domain=$domain&query=orgUnitPath=$encodedOrgUnitPath"
-        'ContentType'     = 'application/json'
-        'Method'          = 'GET'
-        'Headers'         = $headers
-        'Verbose'         = $true
-        'UseBasicParsing' = $true
-    }
+    $ouHolds = @()
+    Do {
+        $params = @{
+            'Uri'             = $baseURI + "?domain=$domain&query=orgUnitPath=$encodedOrgUnitPath&maxResults=500&pageToken=$(($apiresponse.content | ConvertFrom-Json).nextPageToken)"
+            'ContentType'     = 'application/json'
+            'Method'          = 'GET'
+            'Headers'         = $headers
+            'Verbose'         = $true
+            'UseBasicParsing' = $true
+        }
 
-    $apiResponse = Invoke-WebRequest @params 
+        Write-Host "Calling Google API"    
+        $apiResponse = Invoke-WebRequest @params 
 
-    $ouHolds = ($apiResponse.content | ConvertFrom-Json).users
+        $ouHolds += ($apiResponse.content | ConvertFrom-Json).users
 
-    #$apiResponse
+        #$apiResponse
+    } While (($apiresponse.content | ConvertFrom-Json).nextPageToken)
+
 }
 
 #endregion
